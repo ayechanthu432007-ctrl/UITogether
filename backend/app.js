@@ -9,6 +9,7 @@
  */
 
 const express = require('express');
+const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -63,6 +64,9 @@ app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
 // --- rate limiting for the whole API ---
 app.use('/api', apiLimiter);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // --- routes ---
 app.use('/api', routes);

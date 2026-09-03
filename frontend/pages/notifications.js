@@ -28,12 +28,12 @@
 
   /** Where each notification type should take the user. */
   const LINK_FOR = {
-    buddy_request: '/pages/study-buddy.html#requests',
-    buddy_request_accepted: '/pages/study-buddy.html#matches',
-    buddy_request_rejected: '/pages/study-buddy.html#requests',
-    new_competition: '/pages/campus-life.html#competitions',
-    new_lost_found: '/pages/campus-life.html#lost-found',
-    new_poll: '/pages/voting.html',
+    buddy_request: 'study-buddy.html#requests',
+    buddy_request_accepted: 'study-buddy.html#matches',
+    buddy_request_rejected: 'study-buddy.html#requests',
+    new_competition: 'campus-life.html#competitions',
+    new_lost_found: 'campus-life.html#lost-found',
+    new_poll: 'voting.html',
   };
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -109,12 +109,14 @@
       return;
     }
 
+    const inPages = window.location.pathname.includes('/pages/');
+    const prefix = inPages ? '' : 'pages/';
     list.innerHTML = state.items.map((n) => `
       <div class="req-row notif-row${n.is_read ? '' : ' is-unread'}" data-id="${n.notification_id}">
         <span class="avatar avatar--sm" aria-hidden="true"
               style="background:var(--teal-100);color:var(--teal-800)">${ICONS[n.type] || '🔔'}</span>
 
-        <a class="grow notif-row__link" href="${LINK_FOR[n.type] || '/pages/dashboard.html'}"
+        <a class="grow notif-row__link" href="${LINK_FOR[n.type] ? (prefix + LINK_FOR[n.type]) : (prefix + 'dashboard.html')}"
            data-open="${n.notification_id}">
           <strong style="display:block;color:var(--teal-900)">${escapeHtml(n.title)}</strong>
           <span class="text-sm" style="color:var(--ink-soft)">${escapeHtml(n.message || '')}</span>

@@ -319,7 +319,16 @@
       $('#lf-location').value = item.location || '';
       $('#lf-date').value = item.item_date || '';
       $('#lf-contact').value = item.contact_info || '';
-      $('#lf-image').value = item.image_url || '';
+      // populate preview if an image URL exists
+      if (item.image_url) {
+        $('#lf-image-preview').src = item.image_url;
+        $('#lf-image-preview-wrap').hidden = false;
+        $('#lf-remove-image').value = '';
+      } else {
+        $('#lf-image-preview-wrap').hidden = true;
+        $('#lf-image-preview').src = '';
+        $('#lf-remove-image').value = '';
+      }
     }
     lfModal.open();
   }
@@ -328,28 +337,86 @@
     const form = $('#lf-form');
     if (!form) return;
 
+    const fileInput = $('#lf-image-file');
+    const previewWrap = $('#lf-image-preview-wrap');
+    const previewImg = $('#lf-image-preview');
+    const removeFlag = $('#lf-remove-image');
+    const changeBtn = $('#lf-image-change');
+    const removeBtn = $('#lf-image-remove');
+
+    // helper to reset file selection
+    function clearSelection() {
+      fileInput.value = '';
+      previewImg.src = '';
+      previewWrap.hidden = true;
+      removeFlag.value = '1';
+    }
+
+    fileInput.addEventListener('change', () => {
+      removeFlag.value = '';
+      const file = fileInput.files[0];
+      if (!file) return;
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        showToast('Invalid file type. Please choose a JPG, PNG or WEBP image.', { type: 'error' });
+        fileInput.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image is too large. Max size is 5MB.', { type: 'error' });
+        fileInput.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewWrap.hidden = false;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    changeBtn.addEventListener('click', () => fileInput.click());
+    removeBtn.addEventListener('click', clearSelection);
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearFieldErrors(form);
 
       const id = $('#lf-id').value;
-      const payload = {
+      const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+      const payloadIsForm = hasFile || $('#lf-remove-image').value === '1';
+
+      const common = {
         type: $('#lf-form-type').value,
         title: $('#lf-title').value.trim(),
         description: $('#lf-description').value.trim() || null,
         location: $('#lf-location').value.trim() || null,
         item_date: $('#lf-date').value || null,
         contact_info: $('#lf-contact').value.trim() || null,
-        image_url: $('#lf-image').value.trim() || null,
       };
 
-      if (payload.title.length < 3) { setFieldError('lf-title', 'Title must be at least 3 characters.'); return; }
+      if (payloadIsForm) {
+        var formData = new FormData();
+        Object.entries(common).forEach(([k, v]) => { if (v !== null) formData.append(k, v); });
+        if (hasFile) formData.append('image', fileInput.files[0]);
+        // signal removal of existing image on update
+        if ($('#lf-remove-image').value === '1') formData.append('image_url', '');
+      } else {
+        var payload = Object.assign({}, common, { image_url: null });
+      }
+
+      if (common.title.length < 3) { setFieldError('lf-title', 'Title must be at least 3 characters.'); return; }
 
       const submit = $('#lf-submit');
       setButtonLoading(submit, true, 'Saving…');
       try {
-        if (id) await api.lostFound.update(id, payload);
-        else await api.lostFound.create(payload);
+        if (id) {
+          if (payloadIsForm) await api.lostFound.update(id, formData);
+          else await api.lostFound.update(id, payload);
+        } else {
+          if (payloadIsForm) await api.lostFound.create(formData);
+          else await api.lostFound.create(payload);
+        }
 
         showToast(id ? 'Your post was updated.' : 'Your post is now on the board.',
           { type: 'success', title: 'Saved' });

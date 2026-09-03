@@ -19,7 +19,7 @@
    */
   async function requireAuth() {
     if (!Auth.isAuthenticated()) {
-      window.location.replace('/index.html?auth=required');
+      window.location.replace('index.html?auth=required');
       return null;
     }
     try {
@@ -44,7 +44,10 @@
     const user = await requireAuth();
     if (!user) return null;
     if (user.role !== 'admin') {
-      window.location.replace('/pages/dashboard.html?denied=admin');
+      // Use a relative-aware path so the redirect works whether the current
+      // document is inside `pages/` or served from the frontend root.
+      const dest = window.location.pathname.includes('/pages/') ? 'dashboard.html?denied=admin' : 'pages/dashboard.html?denied=admin';
+      window.location.replace(dest);
       return null;
     }
     return user;
@@ -52,7 +55,11 @@
 
   /** Send an already-signed-in visitor straight to their dashboard. */
   function redirectIfAuthenticated() {
-    if (Auth.isAuthenticated()) { window.location.replace('/pages/dashboard.html'); return true; }
+    if (Auth.isAuthenticated()) {
+      const dest = window.location.pathname.includes('/pages/') ? 'dashboard.html' : 'pages/dashboard.html';
+      window.location.replace(dest);
+      return true;
+    }
     return false;
   }
 

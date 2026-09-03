@@ -12,16 +12,20 @@
   const UIT = window.UIT;
   const { escapeHtml, $, $$ } = UIT;
 
+  // Use filenames only; rendering will prefix with 'pages/' when the current
+  // document is not already inside the `pages/` folder. This keeps links
+  // robust whether the static server root is the frontend folder or the
+  // workspace root.
   const LINKS = [
-    { href: '/pages/dashboard.html',     label: 'Dashboard',     icon: '🏠' },
-    { href: '/pages/study-buddy.html',   label: 'Study Buddy',   icon: '🤝', badge: 'requests' },
-    { href: '/pages/campus-life.html',   label: 'Campus Life',   icon: '🎓' },
-    { href: '/pages/voting.html',        label: 'Voting',        icon: '🗳️' },
-    { href: '/pages/notifications.html', label: 'Notifications', icon: '🔔', badge: 'unread' },
-    { href: '/pages/profile.html',       label: 'Profile',       icon: '👤' },
+    { href: 'dashboard.html',     label: 'Dashboard',     icon: '🏠' },
+    { href: 'study-buddy.html',   label: 'Study Buddy',   icon: '🤝', badge: 'requests' },
+    { href: 'campus-life.html',   label: 'Campus Life',   icon: '🎓' },
+    { href: 'voting.html',        label: 'Voting',        icon: '🗳️' },
+    { href: 'notifications.html', label: 'Notifications', icon: '🔔', badge: 'unread' },
+    { href: 'profile.html',       label: 'Profile',       icon: '👤' },
   ];
 
-  const ADMIN_LINK = { href: '/pages/admin.html', label: 'Admin', icon: '🛠️' };
+  const ADMIN_LINK = { href: 'admin.html', label: 'Admin', icon: '🛠️' };
 
   const currentPath = () => window.location.pathname;
 
@@ -33,20 +37,26 @@
     if (!mount) return;
 
     const path = currentPath();
+    const inPages = path.includes('/pages/');
+    const prefix = inPages ? '' : 'pages/';
+    const currentPage = path.split('/').pop() || 'index.html';
     const isAdmin = Boolean(user && user.role === 'admin');
     const items = isAdmin ? LINKS.concat(ADMIN_LINK) : LINKS;
-
-    const links = items.map((link) => `
-      <a class="nav-link" href="${link.href}"${link.href === path ? ' aria-current="page"' : ''}>
+    const links = items.map((link) => {
+      const href = `${prefix}${link.href}`;
+      const isCurrent = link.href === currentPage || href === path;
+      return `
+      <a class="nav-link" href="${href}"${isCurrent ? ' aria-current="page"' : ''}>
         <span aria-hidden="true">${link.icon}</span>
         <span>${escapeHtml(link.label)}</span>
         ${link.badge ? `<span class="nav-badge" id="nav-badge-${link.badge}" hidden>0</span>` : ''}
-      </a>`).join('');
+      </a>`;
+    }).join('');
 
     mount.innerHTML = `
       <nav class="navbar" aria-label="Main navigation">
         <div class="container navbar__inner">
-          <a class="brand" href="/pages/dashboard.html">
+          <a class="brand" href="${prefix}dashboard.html">
             <span class="brand__mark" aria-hidden="true">UT</span>
             <span>UITogether</span>
             ${isAdmin ? '<span class="badge badge--admin" style="margin-left:4px">Admin</span>' : ''}

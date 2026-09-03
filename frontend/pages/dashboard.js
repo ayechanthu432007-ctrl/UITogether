@@ -64,12 +64,12 @@
   };
 
   const LINK_FOR = {
-    buddy_request: '/pages/study-buddy.html#requests',
-    buddy_request_accepted: '/pages/study-buddy.html#matches',
-    buddy_request_rejected: '/pages/study-buddy.html#requests',
-    new_competition: '/pages/campus-life.html#competitions',
-    new_lost_found: '/pages/campus-life.html#lost-found',
-    new_poll: '/pages/voting.html',
+    buddy_request: 'study-buddy.html#requests',
+    buddy_request_accepted: 'study-buddy.html#matches',
+    buddy_request_rejected: 'study-buddy.html#requests',
+    new_competition: 'campus-life.html#competitions',
+    new_lost_found: 'campus-life.html#lost-found',
+    new_poll: 'voting.html',
   };
 
   async function loadActivity() {
@@ -88,8 +88,10 @@
         return;
       }
 
+      const inPages = window.location.pathname.includes('/pages/');
+      const prefix = inPages ? '' : 'pages/';
       list.innerHTML = items.map((n) => `
-        <a class="req-row" href="${LINK_FOR[n.type] || '/pages/dashboard.html'}"
+        <a class="req-row" href="${(LINK_FOR[n.type] ? (prefix + LINK_FOR[n.type]) : (prefix + 'dashboard.html'))}"
            style="text-decoration:none;${n.is_read ? '' : 'background:var(--teal-50)'}">
           <span class="avatar avatar--sm" aria-hidden="true"
                 style="background:var(--teal-100);color:var(--teal-800)">${ICONS[n.type] || '🔔'}</span>

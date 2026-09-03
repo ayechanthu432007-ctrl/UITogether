@@ -174,7 +174,8 @@
     }
 
     const headers = { Accept: 'application/json' };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const isFormData = (typeof FormData !== 'undefined') && (body instanceof FormData);
+    if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json';
 
     const token = tokenStore.get();
     if (auth && token) headers.Authorization = `Bearer ${token}`;
@@ -184,7 +185,7 @@
       response = await fetch(url, {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : (isFormData ? body : JSON.stringify(body)),
       });
     } catch {
       // DNS failure, server down, CORS rejection, offline...

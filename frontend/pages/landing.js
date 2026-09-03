@@ -109,7 +109,7 @@
         const user = await Auth.register(values);
         showToast(`Welcome to UITogether, ${user.name}! Taking you to your dashboard…`,
           { type: 'success', title: 'Account created' });
-        setTimeout(() => window.location.replace('/pages/dashboard.html'), 900);
+        setTimeout(() => window.location.replace(window.location.pathname.includes('/pages/') ? 'dashboard.html' : 'pages/dashboard.html'), 900);
       } catch (error) {
         setButtonLoading(submit, false);
         handleAuthError(error, form, {
@@ -146,7 +146,7 @@
         const user = await Auth.login({ email, password });
         showToast(`Welcome back, ${user.name}!`, { type: 'success', title: 'Logged in' });
         modal.close();
-        setTimeout(() => window.location.replace('/pages/dashboard.html'), 700);
+        setTimeout(() => window.location.replace(window.location.pathname.includes('/pages/') ? 'dashboard.html' : 'pages/dashboard.html'), 700);
       } catch (error) {
         setButtonLoading(submit, false);
         if (error instanceof ApiError && error.status === 401) {
