@@ -13,8 +13,17 @@
 
   /* ------------------------------------------------------------------ *
    *  API CONFIGURATION
+   *
+   * Runtime selection: prefer an explicit `window.UIT.API_BASE_URL` if set
+   * (useful for debug or embedding). Otherwise, use the local backend when
+   * the page is served from localhost/127.0.0.1, and default to the
+   * production Vercel backend otherwise.
    * ------------------------------------------------------------------ */
-  const API_BASE_URL = 'http://localhost:5050/api';
+  const PROD_API = 'https://ui-together-r7lm.vercel.app/api';
+  const LOCAL_API = 'http://localhost:5050/api';
+  const inferredLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const API_BASE_URL = (window.UIT && window.UIT.API_BASE_URL)
+    || (inferredLocalhost ? LOCAL_API : PROD_API);
 
   const TOKEN_KEY = 'token';        // localStorage key holding the JWT
   const USER_KEY  = 'uit_user';     // cached user object (convenience only)
