@@ -5,8 +5,10 @@ const fs = require('fs');
 const multer = require('multer');
 const { env } = require('../config/env');
 
-// Ensure upload directory exists
-const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads');
+// Vercel serverless runs on a read-only filesystem except /tmp.
+const UPLOAD_DIR = process.env.VERCEL
+  ? path.join('/tmp', 'uitogether-uploads')
+  : path.join(__dirname, '..', 'public', 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const storage = multer.diskStorage({

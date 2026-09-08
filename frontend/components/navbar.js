@@ -53,11 +53,14 @@
       </a>`;
     }).join('');
 
+    // compute logo path relative to the current document location
+    // pages/ files are nested one level deeper than the frontend root
+    const logoPath = inPages ? '../../Logo/UITogether_Logo.jpg' : '../Logo/UITogether_Logo.jpg';
     mount.innerHTML = `
       <nav class="navbar" aria-label="Main navigation">
         <div class="container navbar__inner">
           <a class="brand" href="${prefix}dashboard.html">
-            <span class="brand__mark" aria-hidden="true">UT</span>
+            <span class="brand__mark" aria-hidden="true"><img src="${logoPath}" alt="UITogether logo"></span>
             <span>UITogether</span>
             ${isAdmin ? '<span class="badge badge--admin" style="margin-left:4px">Admin</span>' : ''}
           </a>

@@ -43,6 +43,23 @@
 
     Navbar.renderNavbar(user);
     detailModal = createModal('detail-modal');
+    // Modal action buttons (Accept/Reject for incoming requests)
+    const btnAccept = document.getElementById('detail-accept');
+    const btnReject = document.getElementById('detail-reject');
+    if (btnAccept) btnAccept.addEventListener('click', async () => {
+      const requestId = btnAccept.dataset.requestId;
+      if (requestId) {
+        await respond('accept', requestId, btnAccept);
+        detailModal.close();
+      }
+    });
+    if (btnReject) btnReject.addEventListener('click', async () => {
+      const requestId = btnReject.dataset.requestId;
+      if (requestId) {
+        await respond('reject', requestId, btnReject);
+        detailModal.close();
+      }
+    });
 
     const tabs = initTabs('.tabs', (tabId) => {
       if (tabId === 'tab-requests') loadRequests();
@@ -336,10 +353,15 @@
   }
 
   /* ---------------- details modal ---------------- */
-  async function openDetails(userId) {
+  async function openDetails(userId, requestId) {
     const body = $('#detail-body');
     showLoading(body, 'Loading profile…');
     detailModal.open();
+    // prepare modal action buttons
+    const btnAccept = document.getElementById('detail-accept');
+    const btnReject = document.getElementById('detail-reject');
+    if (btnAccept) { btnAccept.hidden = true; delete btnAccept.dataset.requestId; }
+    if (btnReject) { btnReject.hidden = true; delete btnReject.dataset.requestId; }
 
     try {
       const { data } = await api.studyBuddy.byUserId(userId);
@@ -351,6 +373,11 @@
         <hr class="divider">
         <h4 class="mb-3" style="font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint)">Contact</h4>
         ${contactMarkup(profile)}`;
+      // If we opened the modal from an incoming request, show accept/reject
+      if (requestId) {
+        if (btnAccept) { btnAccept.hidden = false; btnAccept.dataset.requestId = requestId; }
+        if (btnReject) { btnReject.hidden = false; btnReject.dataset.requestId = requestId; }
+      }
     } catch (error) {
       showError(body, error instanceof ApiError ? error.message : 'Unable to load this profile.');
     }
@@ -423,22 +450,63 @@
 
       list.innerHTML = requests.map((r) => {
         const c = r.counterpart || {};
+        const shortBio = c.notes ? escapeHtml(c.notes).slice(0, 140) : '';
         return `
-          <div class="req-row" data-request="${r.request_id}">
-            <span class="avatar avatar--sm" aria-hidden="true">${escapeHtml(initials(c.nickname || c.name))}</span>
-            <span class="grow">
-              <strong style="display:block;color:var(--teal-900)">${escapeHtml(c.nickname || c.name || 'Student')}</strong>
-              <span class="text-sm text-muted">${escapeHtml(c.name || '')}${c.semester ? ` · ${escapeHtml(c.semester)}` : ''} · ${escapeHtml(timeAgo(r.created_at))}</span>
-            </span>
-            <span class="req-row__actions">
-              <button type="button" class="btn btn-ghost btn-sm" data-action="reject" data-id="${r.request_id}">Reject</button>
-              <button type="button" class="btn btn-primary btn-sm" data-action="accept" data-id="${r.request_id}">Accept</button>
-            </span>
+          <div class="req-card" data-request="${r.request_id}" data-user="${c.user_id}">
+            <div class="req-card__left">
+              <span class="avatar avatar--sm" aria-hidden="true">${escapeHtml(initials(c.nickname || c.name))}</span>
+            </div>
+            <div class="req-card__body grow">
+              <div class="row-between">
+                <div>
+                  <strong style="display:block;color:var(--teal-900)">${escapeHtml(c.nickname || c.name || 'Student')}</strong>
+                  <span class="text-sm text-muted">${escapeHtml(c.name || '')}${c.semester ? ` · ${escapeHtml(c.semester)}` : ''}${c.academic_year ? ` · ${escapeHtml(c.academic_year)}` : ''}</span>
+                </div>
+                <div class="text-sm text-muted">${escapeHtml(timeAgo(r.created_at))}</div>
+              </div>
+              <p class="text-sm text-muted mt-2">${shortBio || '<span class="text-muted text-sm">No bio provided</span>'}</p>
+            </div>
+            <div class="req-card__actions">
+              <button type="button" class="btn btn-ghost btn-sm" data-view="view" data-user="${c.user_id}" data-request="${r.request_id}">View Profile</button>
+              <button type="button" class="btn btn-danger btn-sm" data-reject="${r.request_id}">Reject</button>
+              <button type="button" class="btn btn-success btn-sm" data-accept="${r.request_id}">Accept</button>
+            </div>
           </div>`;
       }).join('');
 
-      list.querySelectorAll('[data-action]').forEach((btn) => {
-        btn.addEventListener('click', () => respond(btn.dataset.action, btn.dataset.id, btn));
+      // Open profile modal when clicking the card or the View Profile button
+      list.querySelectorAll('.req-card').forEach((el) => {
+        el.addEventListener('click', (ev) => {
+          // prevent clicks on buttons bubbling to card
+          if (ev.target && ev.target.closest('button')) return;
+          const userId = el.dataset.user;
+          const requestId = el.dataset.request;
+          openDetails(userId, requestId);
+        });
+      });
+
+      list.querySelectorAll('[data-view]').forEach((btn) => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          openDetails(btn.dataset.user, btn.dataset.request);
+        });
+      });
+      // Card-level accept/reject buttons
+      list.querySelectorAll('[data-accept]').forEach((btn) => {
+        btn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const requestId = btn.dataset.accept;
+          if (!requestId) return;
+          await respond('accept', requestId, btn);
+        });
+      });
+      list.querySelectorAll('[data-reject]').forEach((btn) => {
+        btn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const requestId = btn.dataset.reject;
+          if (!requestId) return;
+          await respond('reject', requestId, btn);
+        });
       });
     } catch (error) {
       showError(list, 'Unable to load your incoming requests.', loadIncoming);

@@ -146,7 +146,12 @@ async function listIncoming(userId, filters, pagination) {
     `SELECT ${BASE_COLUMNS},
             u.user_id AS counterpart_id, u.name AS counterpart_name,
             u.academic_year AS counterpart_academic_year,
-            p.nickname AS counterpart_nickname, p.semester AS counterpart_semester
+            p.nickname AS counterpart_nickname, p.semester AS counterpart_semester,
+            p.study_style AS counterpart_study_style,
+            p.weak_subjects AS counterpart_weak_subjects,
+            p.strong_subjects AS counterpart_strong_subjects,
+            p.wanna_meet AS counterpart_wanna_meet,
+            p.notes AS counterpart_notes
        FROM buddy_requests r
        JOIN users u ON u.user_id = r.sender_id
        LEFT JOIN study_buddy_profiles p ON p.user_id = r.sender_id
@@ -182,7 +187,12 @@ async function listOutgoing(userId, filters, pagination) {
     `SELECT ${BASE_COLUMNS},
             u.user_id AS counterpart_id, u.name AS counterpart_name,
             u.academic_year AS counterpart_academic_year,
-            p.nickname AS counterpart_nickname, p.semester AS counterpart_semester
+            p.nickname AS counterpart_nickname, p.semester AS counterpart_semester,
+            p.study_style AS counterpart_study_style,
+            p.weak_subjects AS counterpart_weak_subjects,
+            p.strong_subjects AS counterpart_strong_subjects,
+            p.wanna_meet AS counterpart_wanna_meet,
+            p.notes AS counterpart_notes
        FROM buddy_requests r
        JOIN users u ON u.user_id = r.receiver_id
        LEFT JOIN study_buddy_profiles p ON p.user_id = r.receiver_id

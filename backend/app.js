@@ -22,6 +22,9 @@ const { notFoundHandler, errorHandler } = require('./middleware/error.middleware
 const logger = require('./utils/logger');
 
 const app = express();
+const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'uitogether-uploads')
+  : path.join(__dirname, 'public', 'uploads');
 
 // Correct client IPs behind a proxy, so rate limiting is not fooled.
 app.set('trust proxy', 1);
@@ -65,8 +68,8 @@ app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 // --- rate limiting for the whole API ---
 app.use('/api', apiLimiter);
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+// Serve uploaded files from the current runtime storage directory.
+app.use('/uploads', express.static(uploadDir));
 
 // --- routes ---
 app.use('/api', routes);

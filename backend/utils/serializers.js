@@ -115,6 +115,11 @@ function toBuddyRequest(row) {
           academic_year: row.counterpart_academic_year,
           nickname: row.counterpart_nickname ?? null,
           semester: row.counterpart_semester ?? null,
+          study_style: row.counterpart_study_style ?? null,
+          weak_subjects: toList(row.counterpart_weak_subjects),
+          strong_subjects: toList(row.counterpart_strong_subjects),
+          wanna_meet: row.counterpart_wanna_meet ?? null,
+          notes: row.counterpart_notes ?? null,
         }
       : undefined,
   };
